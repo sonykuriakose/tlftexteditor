@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flexLibProperties includeAllClasses="true" version="3">
+  <includeClasses>
+    <classEntry path="com.asciiworks.tlf.TLFTextEditor"/>
+    <classEntry path="com.asciiworks.tlf.supportClasses.ColorListSkin"/>
+    <classEntry path="com.asciiworks.tlf.supportClasses.ColorListItemRenderer"/>
+    <classEntry path="com.asciiworks.tlf.supportClasses.ColorList"/>
+    <classEntry path="com.asciiworks.tlf.supportClasses.Icons"/>
+    <classEntry path="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"/>
+    <classEntry path="com.asciiworks.tlf.supportClasses.IconButtonSkin"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>

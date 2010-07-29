@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx" creationComplete="creationCompleteHandler(event)"
+         xmlns:supportClasses="com.asciiworks.tlf.supportClasses.*">
+
+    <s:layout>
+        <s:VerticalLayout gap="0"/>
+    </s:layout>
+
+    <fx:Script>
+        <![CDATA[
+            import com.asciiworks.tlf.supportClasses.Icons;
+        ]]>
+    </fx:Script>
+    <fx:Script>
+        <![CDATA[
+            import com.asciiworks.tlf.supportClasses.ColorListSkin;
+
+            import flashx.textLayout.conversion.ConversionType;
+            import flashx.textLayout.conversion.TextConverter;
+            import flashx.textLayout.edit.EditManager;
+            import flashx.textLayout.elements.TextFlow;
+            import flashx.textLayout.formats.ITextLayoutFormat;
+            import flashx.textLayout.formats.TextLayoutFormat;
+
+            import mx.events.ColorPickerEvent;
+            import mx.events.FlexEvent;
+            import mx.skins.spark.ColorPickerSkin;
+
+            import spark.events.IndexChangeEvent;
+
+            public var initialTextFlowMarkup:String = "<TextFlow xmlns='http://ns.adobe.com/textLayout/2008' color='0xffffff' lineHeight='180%'><p>This is an example of <b>About Us</b>. &nbsp;Here is <a title=\"Google link\" href=\"http://google.com\">a link</a> to click on. This is <span color='0x00ff00'>green</span> text. &nbsp;This is <span fontFamily='Comic Sans MS'>Comic Sans</span> text.  And <span fontSize='25'>this text</span> is large.</p></TextFlow>";
+
+            private var editManager:EditManager;
+
+            //--------------------------------------------------------------------------
+            //
+            //  Properties
+            //
+            //--------------------------------------------------------------------------
+
+            //--------------------------------------
+            //  availableTextColors
+            //--------------------------------------
+
+            private var _availableTextColors:Array;
+
+            public function get availableTextColors():Array {
+                return _availableTextColors;
+            }
+
+            public function set availableTextColors(value:Array):void {
+                if (_availableTextColors == value)
+                    return;
+
+                colorList.visible = value != null;
+                colorList.includeInLayout = value != null;
+                colorPicker.visible = value == null;
+                colorPicker.includeInLayout = value == null;
+
+                if (value)
+                    colorList.dataProvider = new ArrayCollection(value);
+            }
+
+            //--------------------------------------
+            //  textAreaBackgroundColor
+            //--------------------------------------
+
+            public function get textAreaBackgroundColor():uint {
+                return display.getStyle("backgroundColor");
+            }
+
+            public function set textAreaBackgroundColor(value:uint):void {
+                display.setStyle("backgroundColor", value);
+            }
+
+            //--------------------------------------
+            //  textFlow
+            //--------------------------------------
+
+            [Bindable(event="textFlowChanged")]
+
+            public function get textFlow():TextFlow {
+                return display.textFlow.deepCopy() as TextFlow;
+            }
+
+            //--------------------------------------
+            //  textFlowMarkup
+            //--------------------------------------
+
+            [Bindable(event="textFlowChanged")]
+
+            public function get textFlowMarkup():String {
+                return TextConverter.export(display.textFlow, TextConverter.TEXT_LAYOUT_FORMAT, ConversionType.STRING_TYPE) as String;
+            }
+
+            //--------------------------------------------------------------------------
+            //
+            //  Event handlers
+            //
+            //--------------------------------------------------------------------------
+
+            private function creationCompleteHandler(event:Event):void {
+                display.textFlow = TextConverter.importToFlow(initialTextFlowMarkup, TextConverter.TEXT_LAYOUT_FORMAT);
+                editManager = display.textFlow.interactionManager as EditManager;
+                dispatchEvent(new Event('textFlowChanged'));
+            }
+
+            private function bold_clickHandler(event:MouseEvent):void {
+                var boldFormat:TextLayoutFormat = new TextLayoutFormat();
+                boldFormat.fontWeight = bold.selected ? "bold" : "normal";
+                editManager.applyLeafFormat(boldFormat);
+            }
+
+            private function italic_clickHandler(event:MouseEvent):void {
+                var italicFormat:TextLayoutFormat = new TextLayoutFormat();
+                italicFormat.fontStyle = italic.selected ? "italic" : "normal";
+                editManager.applyLeafFormat(italicFormat);
+            }
+
+
+            private function underline_clickHandler(event:MouseEvent):void {
+                var underlineFormat:TextLayoutFormat = new TextLayoutFormat();
+                underlineFormat.textDecoration = underline.selected ? "underline" : "none";
+                editManager.applyLeafFormat(underlineFormat);
+            }
+
+            private function fontSize_changeHandler(event:IndexChangeEvent):void {
+                var item:Object = event.currentTarget.selectedItem;
+                var fontStyle:TextLayoutFormat = new TextLayoutFormat();
+                fontStyle.fontSize = item;
+                editManager.applyLeafFormat(fontStyle);
+            }
+
+            private function fontFamily_changeHandler(event:IndexChangeEvent):void {
+                var item:Object = event.currentTarget.selectedItem;
+                var fontStyle:TextLayoutFormat = new TextLayoutFormat();
+                fontStyle.fontFamily = item;
+                editManager.applyLeafFormat(fontStyle);
+            }
+
+            private function link_clickHandler(event:MouseEvent):void {
+                var colorStyle:TextLayoutFormat = new TextLayoutFormat();
+                colorStyle.color = 0x000000;
+                editManager.clearFormat(colorStyle, null, null);
+                editManager.applyLink("http://www.wikipedi.org", "_blank", true);
+            }
+
+            private function unlink_clickHandler(event:MouseEvent):void {
+                editManager.applyLink("", null, true);
+            }
+
+            private function image_clickHandler(event:MouseEvent):void {
+                editManager.insertInlineGraphic("http://planetsmilies.net/eat-drink-smiley-5145.gif", "auto", "auto");
+            }
+
+            private function colorPicker_changeHandler(event:Event):void {
+                var colorFormat:Object;
+                if (event is ColorPickerEvent)
+                    colorFormat = event.currentTarget.selectedColor;
+                else if (event is IndexChangeEvent)
+                    colorFormat = event.currentTarget.selectedItem;
+
+                var colorStyle:TextLayoutFormat = new TextLayoutFormat();
+                colorStyle.color = colorFormat;
+                editManager.applyLeafFormat(colorStyle);
+            }
+
+            private function display_selectionChangeHandler(event:FlexEvent):void {
+                var format:ITextLayoutFormat = editManager.getCommonCharacterFormat();
+
+                // bold, italic, underline
+                var boldFormat:* = format.fontWeight;
+                bold.selected = boldFormat == "bold";
+                var italicFormat:* = format.fontStyle;
+                italic.selected = italicFormat == "italic";
+                var underlineFormat:* = format.textDecoration;
+                underline.selected = underlineFormat == "underline";
+
+                // font size
+                var size:* = format.fontSize;
+                if (size == undefined)
+                    fontSize.selectedIndex = -1;
+                else
+                    fontSize.selectedItem = format.fontSize;
+
+                // font family
+                var family:* = format.fontFamily;
+                if (family == undefined)
+                    fontFamily.selectedIndex = -1;
+                else
+                    fontFamily.selectedItem = format.fontFamily;
+
+                // color
+                var colorFormat:* = format.color;
+                if (colorFormat == undefined) {
+                    colorPicker.selectedColor = 0x000000;
+                    colorList.selectedItem = null;
+                } else {
+                    colorPicker.selectedColor = colorFormat;
+                    colorList.selectedItem = colorFormat;
+                }
+            }
+        ]]>
+    </fx:Script>
+
+    <s:Group id="toolbar" width="100%">
+        <s:layout>
+            <s:HorizontalLayout gap="0"/>
+        </s:layout>
+        <s:ToggleButton id="bold" width="23" height="23" cornerRadius="0"
+                        click="bold_clickHandler(event)"
+                        skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
+                        content="{Icons.getIcon(3)}" toolTip="Bold"/>
+        <s:ToggleButton id="italic" width="23" height="23" cornerRadius="0"
+                        click="italic_clickHandler(event)"
+                        skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
+                        content="{Icons.getIcon(7)}" toolTip="Italic"/>
+        <s:ToggleButton id="underline" width="23" height="23" cornerRadius="0"
+                        click="underline_clickHandler(event)"
+                        skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
+                        content="{Icons.getIcon(19)}" toolTip="Underline"/>
+        <s:Button width="23" height="23" cornerRadius="0" click=";"
+                  skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
+                  content="{Icons.getIcon(18)}" toolTip="Bulleted list"/>
+        <s:Button width="23" height="23" cornerRadius="0" click=";"
+                  skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
+                  content="{Icons.getIcon(10)}" toolTip="Numerical list"/>
+        <s:ComboBox id="fontSize" width="50" cornerRadius="0" selectedItem="12"
+                    change="fontSize_changeHandler(event)" toolTip="Font size">
+            <s:dataProvider>
+                <s:ArrayCollection>
+                    <fx:Object>6</fx:Object>
+                    <fx:Object>7</fx:Object>
+                    <fx:Object>8</fx:Object>
+                    <fx:Object>9</fx:Object>
+                    <fx:Object>10</fx:Object>
+                    <fx:Object>11</fx:Object>
+                    <fx:Object>12</fx:Object>
+                    <fx:Object>13</fx:Object>
+                    <fx:Object>14</fx:Object>
+                    <fx:Object>15</fx:Object>
+                    <fx:Object>16</fx:Object>
+                    <fx:Object>18</fx:Object>
+                    <fx:Object>20</fx:Object>
+                    <fx:Object>22</fx:Object>
+                    <fx:Object>24</fx:Object>
+                    <fx:Object>26</fx:Object>
+                    <fx:Object>28</fx:Object>
+                    <fx:Object>32</fx:Object>
+                    <fx:Object>36</fx:Object>
+                    <fx:Object>40</fx:Object>
+                    <fx:Object>44</fx:Object>
+                    <fx:Object>48</fx:Object>
+                    <fx:Object>54</fx:Object>
+                    <fx:Object>60</fx:Object>
+                    <fx:Object>66</fx:Object>
+                    <fx:Object>72</fx:Object>
+                    <fx:Object>80</fx:Object>
+                    <fx:Object>88</fx:Object>
+                    <fx:Object>96</fx:Object>
+                </s:ArrayCollection>
+            </s:dataProvider>
+        </s:ComboBox>
+        <s:ComboBox id="fontFamily" width="100" cornerRadius="0" selectedIndex="0"
+                    change="fontFamily_changeHandler(event)" toolTip="Font family">
+            <s:dataProvider>
+                <s:ArrayCollection>
+                    <fx:Object>Arial</fx:Object>
+                    <fx:Object>Courier</fx:Object>
+                    <fx:Object>Courier New</fx:Object>
+                    <fx:Object>Geneva</fx:Object>
+                    <fx:Object>Georgia</fx:Object>
+                    <fx:Object>Helvetica</fx:Object>
+                    <fx:Object>Times New Roman</fx:Object>
+                    <fx:Object>Times</fx:Object>
+                    <fx:Object>Verdana</fx:Object>
+                </s:ArrayCollection>
+            </s:dataProvider>
+        </s:ComboBox>
+        <mx:ColorPicker id="colorPicker" height="23" color="0x000000"
+                        change="colorPicker_changeHandler(event)" toolTip="Text color"/>
+        <supportClasses:ColorList id="colorList" width="50" height="23" visible="false"
+                                  includeInLayout="false"
+                                  skinClass="com.asciiworks.tlf.supportClasses.ColorListSkin"
+                                  itemRenderer="com.asciiworks.tlf.supportClasses.ColorListItemRenderer"
+                                  selectedIndex="0" change="colorPicker_changeHandler(event)"
+                                  toolTip="Text color"/>
+        <s:Button width="23" height="23" cornerRadius="0" click="link_clickHandler(event)"
+                  skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
+                  content="{Icons.getIcon(21)}" toolTip="Link"/>
+        <s:Button width="23" height="23" cornerRadius="0" click="unlink_clickHandler(event)"
+                  skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
+                  content="{Icons.getIcon(22)}" toolTip="Remove link"/>
+        <s:Button width="23" height="23" cornerRadius="0" click="image_clickHandler(event)"
+                  skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
+                  content="{Icons.getIcon(20)}" toolTip="Insert image"/>
+    </s:Group>
+
+    <s:RichEditableText id="display" width="100%" height="{Math.max(200,display.contentHeight)}"
+                        change="dispatchEvent(new Event('textFlowChanged'));"
+                        selectionChange="display_selectionChangeHandler(event)"/>
+
+    <s:BitmapImage source="{Icons.getIcon(3)}"/>
+</s:Group>
