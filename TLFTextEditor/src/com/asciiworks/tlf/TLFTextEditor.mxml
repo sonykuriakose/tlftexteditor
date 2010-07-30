@@ -7,6 +7,10 @@
         <s:VerticalLayout gap="0"/>
     </s:layout>
 
+    <fx:Metadata>
+		[Event(name="textFlowChanged",type="flash.events.Event")]
+	</fx:Metadata>
+
     <fx:Script>
         <![CDATA[
             import com.asciiworks.tlf.supportClasses.Icons;
@@ -14,6 +18,7 @@
     </fx:Script>
     <fx:Script>
         <![CDATA[
+            import spark.events.DropDownEvent;
             import com.asciiworks.tlf.supportClasses.ColorListSkin;
 
             import flashx.textLayout.conversion.ConversionType;
@@ -28,8 +33,6 @@
             import mx.skins.spark.ColorPickerSkin;
 
             import spark.events.IndexChangeEvent;
-
-            public var initialTextFlowMarkup:String = "<TextFlow xmlns='http://ns.adobe.com/textLayout/2008' color='0xffffff' lineHeight='180%'><p>This is an example of <b>About Us</b>. &nbsp;Here is <a title=\"Google link\" href=\"http://google.com\">a link</a> to click on. This is <span color='0x00ff00'>green</span> text. &nbsp;This is <span fontFamily='Comic Sans MS'>Comic Sans</span> text.  And <span fontSize='25'>this text</span> is large.</p></TextFlow>";
 
             private var editManager:EditManager;
 
@@ -63,6 +66,52 @@
             }
 
             //--------------------------------------
+            //  initialTextColor
+            //--------------------------------------
+
+            private var _initialTextColor:uint = undefined;
+
+            public function get initialTextColor():uint {
+                return _initialTextColor;
+            }
+
+            public function set initialTextColor(value:uint):void {
+                if (_initialTextColor == value)
+                    return;
+
+                if (editManager) {
+                    var colorStyle:TextLayoutFormat = new TextLayoutFormat();
+                    colorStyle.color = value;
+                    editManager.applyLeafFormat(colorStyle);
+                }
+
+                _initialTextColor = value;
+            }
+
+            //--------------------------------------
+            //  lineHeight
+            //--------------------------------------
+
+            private var _lineHeight:Object;
+
+            public function get lineHeight():Object {
+                return _lineHeight;
+            }
+
+            public function set lineHeight(value:Object):void {
+                if (_lineHeight == value)
+                    return;
+
+                if (editManager) {
+                    var containerStyle:TextLayoutFormat = new TextLayoutFormat();
+                    containerStyle.lineHeight = value;
+                    editManager.applyContainerFormat(containerStyle);
+                }
+
+                _lineHeight = value;
+            }
+
+            //--------------------------------------
             //  textAreaBackgroundColor
             //--------------------------------------
 
@@ -84,6 +133,15 @@
                 return display.textFlow.deepCopy() as TextFlow;
             }
 
+            public function set textFlow(value:TextFlow):void {
+                if (display.textFlow == value)
+                    return;
+
+                display.textFlow = value;
+                updateEditManager();
+                dispatchEvent(new Event('textFlowChanged'));
+            }
+
             //--------------------------------------
             //  textFlowMarkup
             //--------------------------------------
@@ -94,6 +152,39 @@
                 return TextConverter.export(display.textFlow, TextConverter.TEXT_LAYOUT_FORMAT, ConversionType.STRING_TYPE) as String;
             }
 
+            public function set textFlowMarkup(value:String):void {
+                var flow:TextFlow = TextConverter.importToFlow(value, TextConverter.TEXT_LAYOUT_FORMAT);
+
+                if (display.textFlow == flow)
+                    return;
+
+                display.textFlow = flow;
+                updateEditManager();
+                dispatchEvent(new Event('textFlowChanged'));
+            }
+
+            //--------------------------------------------------------------------------
+            //
+            //  Methods
+            //
+            //--------------------------------------------------------------------------
+
+            private function updateEditManager():void {
+                editManager = display.textFlow.interactionManager as EditManager;
+
+                // reset initial text color
+                var colorStyle:TextLayoutFormat = new TextLayoutFormat();
+                colorStyle.color = initialTextColor;
+                editManager.applyLeafFormat(colorStyle);
+                colorList.selectedItem = initialTextColor;
+                colorPicker.selectedColor = initialTextColor;
+
+                // reset line height
+                var containerStyle:TextLayoutFormat = new TextLayoutFormat();
+                containerStyle.lineHeight = lineHeight;
+                editManager.applyParagraphFormat(containerStyle);
+            }
+
             //--------------------------------------------------------------------------
             //
             //  Event handlers
@@ -101,8 +192,10 @@
             //--------------------------------------------------------------------------
 
             private function creationCompleteHandler(event:Event):void {
-                display.textFlow = TextConverter.importToFlow(initialTextFlowMarkup, TextConverter.TEXT_LAYOUT_FORMAT);
-                editManager = display.textFlow.interactionManager as EditManager;
+                colorList.addEventListener(DropDownEvent.CLOSE, list_closeHandler);
+                fontSize.addEventListener(DropDownEvent.CLOSE, list_closeHandler);
+                fontFamily.addEventListener(DropDownEvent.CLOSE, list_closeHandler);
+                updateEditManager();
                 dispatchEvent(new Event('textFlowChanged'));
             }
 
@@ -110,19 +203,21 @@
                 var boldFormat:TextLayoutFormat = new TextLayoutFormat();
                 boldFormat.fontWeight = bold.selected ? "bold" : "normal";
                 editManager.applyLeafFormat(boldFormat);
+                display.setFocus();
             }
 
             private function italic_clickHandler(event:MouseEvent):void {
                 var italicFormat:TextLayoutFormat = new TextLayoutFormat();
                 italicFormat.fontStyle = italic.selected ? "italic" : "normal";
                 editManager.applyLeafFormat(italicFormat);
+                display.setFocus();
             }
-
 
             private function underline_clickHandler(event:MouseEvent):void {
                 var underlineFormat:TextLayoutFormat = new TextLayoutFormat();
                 underlineFormat.textDecoration = underline.selected ? "underline" : "none";
                 editManager.applyLeafFormat(underlineFormat);
+                display.setFocus();
             }
 
             private function fontSize_changeHandler(event:IndexChangeEvent):void {
@@ -148,6 +243,7 @@
 
             private function unlink_clickHandler(event:MouseEvent):void {
                 editManager.applyLink("", null, true);
+                display.setFocus();
             }
 
             private function image_clickHandler(event:MouseEvent):void {
@@ -166,7 +262,14 @@
                 editManager.applyLeafFormat(colorStyle);
             }
 
+            private function list_closeHandler(event:DropDownEvent):void {
+                display.setFocus();
+            }
+
             private function display_selectionChangeHandler(event:FlexEvent):void {
+                if (!editManager)
+                    return;
+
                 var format:ITextLayoutFormat = editManager.getCommonCharacterFormat();
 
                 // bold, italic, underline
@@ -227,41 +330,8 @@
                   skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
                   content="{Icons.getIcon(10)}" toolTip="Numerical list"/>
         <s:ComboBox id="fontSize" width="50" cornerRadius="0" selectedItem="12"
-                    change="fontSize_changeHandler(event)" toolTip="Font size">
-            <s:dataProvider>
-                <s:ArrayCollection>
-                    <fx:Object>6</fx:Object>
-                    <fx:Object>7</fx:Object>
-                    <fx:Object>8</fx:Object>
-                    <fx:Object>9</fx:Object>
-                    <fx:Object>10</fx:Object>
-                    <fx:Object>11</fx:Object>
-                    <fx:Object>12</fx:Object>
-                    <fx:Object>13</fx:Object>
-                    <fx:Object>14</fx:Object>
-                    <fx:Object>15</fx:Object>
-                    <fx:Object>16</fx:Object>
-                    <fx:Object>18</fx:Object>
-                    <fx:Object>20</fx:Object>
-                    <fx:Object>22</fx:Object>
-                    <fx:Object>24</fx:Object>
-                    <fx:Object>26</fx:Object>
-                    <fx:Object>28</fx:Object>
-                    <fx:Object>32</fx:Object>
-                    <fx:Object>36</fx:Object>
-                    <fx:Object>40</fx:Object>
-                    <fx:Object>44</fx:Object>
-                    <fx:Object>48</fx:Object>
-                    <fx:Object>54</fx:Object>
-                    <fx:Object>60</fx:Object>
-                    <fx:Object>66</fx:Object>
-                    <fx:Object>72</fx:Object>
-                    <fx:Object>80</fx:Object>
-                    <fx:Object>88</fx:Object>
-                    <fx:Object>96</fx:Object>
-                </s:ArrayCollection>
-            </s:dataProvider>
-        </s:ComboBox>
+                    change="fontSize_changeHandler(event)" toolTip="Font size"
+                    dataProvider="{new ArrayCollection([6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,32,36,40,44,48,54,60,66,72,80,88,96])}"/>
         <s:ComboBox id="fontFamily" width="100" cornerRadius="0" selectedIndex="0"
                     change="fontFamily_changeHandler(event)" toolTip="Font family">
             <s:dataProvider>
@@ -299,7 +369,7 @@
 
     <s:RichEditableText id="display" width="100%" height="{Math.max(200,display.contentHeight)}"
                         change="dispatchEvent(new Event('textFlowChanged'));"
-                        selectionChange="display_selectionChangeHandler(event)"/>
+                        selectionChange="display_selectionChangeHandler(event)"
+                        creationComplete="display.setFocus();"/>
 
-    <s:BitmapImage source="{Icons.getIcon(3)}"/>
 </s:Group>
