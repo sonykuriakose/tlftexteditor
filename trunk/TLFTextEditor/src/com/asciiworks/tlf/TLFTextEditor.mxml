@@ -18,6 +18,8 @@
     </fx:Script>
     <fx:Script>
         <![CDATA[
+            import flashx.textLayout.elements.FlowElement;
+            import com.asciiworks.tlf.supportClasses.ContentDropDownListEvent;
             import spark.events.DropDownEvent;
             import com.asciiworks.tlf.supportClasses.ColorListSkin;
 
@@ -69,7 +71,7 @@
             //  initialTextColor
             //--------------------------------------
 
-            private var _initialTextColor:uint = undefined;
+            private var _initialTextColor:uint = 0x000000;
 
             public function get initialTextColor():uint {
                 return _initialTextColor;
@@ -234,20 +236,33 @@
                 editManager.applyLeafFormat(fontStyle);
             }
 
-            private function link_clickHandler(event:MouseEvent):void {
+            private function link_submitHandler(event:ContentDropDownListEvent):void {
+                var link:Object = event.payload;
                 var colorStyle:TextLayoutFormat = new TextLayoutFormat();
-                colorStyle.color = 0x000000;
+                colorStyle.color = 0xFFD87D;
                 editManager.clearFormat(colorStyle, null, null);
-                editManager.applyLink("http://www.wikipedi.org", "_blank", true);
-            }
-
-            private function unlink_clickHandler(event:MouseEvent):void {
-                editManager.applyLink("", null, true);
+                editManager.applyLink(link.url, link.destinationWindow, true);
                 display.setFocus();
             }
 
-            private function image_clickHandler(event:MouseEvent):void {
-                editManager.insertInlineGraphic("http://planetsmilies.net/eat-drink-smiley-5145.gif", "auto", "auto");
+            private function unlink_clickHandler(event:MouseEvent):void {
+                // clear the link
+                editManager.applyLink("", null, true);
+
+                // Set color, first try to set it same as the element before the link,
+                // if it exists.  If not, use the initialTextColor.
+                var start:int = editManager.getSelectionState().absoluteStart;
+                var previousEl:FlowElement = editManager.textFlow.findLeaf(start - 1);
+                var colorStyle:TextLayoutFormat = new TextLayoutFormat();
+                colorStyle.color = previousEl ? previousEl.color : initialTextColor;
+                editManager.applyLeafFormat(colorStyle);
+
+                display.setFocus();
+            }
+
+            private function image_submitHandler(event:ContentDropDownListEvent):void {
+				var payload:Object = event.payload;
+                editManager.insertInlineGraphic(payload.url, payload.width, payload.height);
             }
 
             private function colorPicker_changeHandler(event:Event):void {
@@ -356,15 +371,17 @@
                                   itemRenderer="com.asciiworks.tlf.supportClasses.ColorListItemRenderer"
                                   selectedIndex="0" change="colorPicker_changeHandler(event)"
                                   toolTip="Text color"/>
-        <s:Button width="23" height="23" cornerRadius="0" click="link_clickHandler(event)"
-                  skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
-                  content="{Icons.getIcon(21)}" toolTip="Link"/>
+        <supportClasses:ContentDropDownList width="23" height="23" cornerRadius="0"
+                                            submit="link_submitHandler(event)"
+                                            skinClass="com.asciiworks.tlf.supportClasses.LinkDropDownListSkin"
+                                            content="{Icons.getIcon(21)}" toolTip="Link"/>
         <s:Button width="23" height="23" cornerRadius="0" click="unlink_clickHandler(event)"
                   skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
                   content="{Icons.getIcon(22)}" toolTip="Remove link"/>
-        <s:Button width="23" height="23" cornerRadius="0" click="image_clickHandler(event)"
-                  skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
-                  content="{Icons.getIcon(20)}" toolTip="Insert image"/>
+        <supportClasses:ContentDropDownList width="23" height="23" cornerRadius="0"
+                                            submit="image_submitHandler(event)"
+                                            skinClass="com.asciiworks.tlf.supportClasses.ImageDropDownListSkin"
+                                            content="{Icons.getIcon(20)}" toolTip="Insert image"/>
     </s:Group>
 
     <s:RichEditableText id="display" width="100%" height="{Math.max(200,display.contentHeight)}"
