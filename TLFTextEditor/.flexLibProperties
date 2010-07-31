@@ -8,6 +8,9 @@
     <classEntry path="com.asciiworks.tlf.supportClasses.Icons"/>
     <classEntry path="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"/>
     <classEntry path="com.asciiworks.tlf.supportClasses.IconButtonSkin"/>
+    <classEntry path="com.asciiworks.tlf.supportClasses.LinkDropDownListSkin"/>
+    <classEntry path="com.asciiworks.tlf.supportClasses.ContentDropDownList"/>
+    <classEntry path="com.asciiworks.tlf.supportClasses.ContentDropDownListEvent"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
