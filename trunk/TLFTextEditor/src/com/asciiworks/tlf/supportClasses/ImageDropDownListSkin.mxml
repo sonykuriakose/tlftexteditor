@@ -171,7 +171,7 @@
             </s:Rect>
 
             <s:Label top="17" left="17" text="URL:"/>
-            <s:TextInput id="url" top="11" left="50" right="5" text="http://farm"
+            <s:TextInput id="url" top="11" left="50" right="5" text="http://"
                          change="submitButton.enabled = url.text != '' &amp;&amp; url.text != 'http://';updatePayload();"/>
 
             <s:Label top="42" left="18" text="Width:"/>
