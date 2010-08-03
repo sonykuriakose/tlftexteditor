@@ -39,14 +39,24 @@
 
             private var editManager:EditManager;
 
-			//--------------------------------------------------------------------------
-			//
-			//  Variables
-			//
-			//--------------------------------------------------------------------------
+            //--------------------------------------------------------------------------
+            //
+            //  Constants
+            //
+            //--------------------------------------------------------------------------
 
-			private static const BULLET_TEXT:String = "  •  ";
+            private static const BULLET_TEXT:String = "  •  ";
 
+            private static const INDENTATION_PIXELS:int = 30;
+
+            //--------------------------------------------------------------------------
+            //
+            //  Variables
+            //
+            //--------------------------------------------------------------------------
+
+            private var enterKeyPressed:Boolean = false;
+			
             //--------------------------------------------------------------------------
             //
             //  Properties
@@ -197,26 +207,19 @@
             }
 
             private function bulletListSelected():void {
-                var start:int = editManager.getSelectionState().absoluteStart;
-                var end:int = editManager.getSelectionState().absoluteEnd;
-                var firstElement:FlowElement = editManager.textFlow.findLeaf(start);
-                var firstElementParagraph:ParagraphElement = firstElement.getParagraph();
-                var lastElement:FlowElement = editManager.textFlow.findLeaf(end);
-                var lastElementParagraph:ParagraphElement = lastElement.getParagraph();
+                var paragraphs:Array = getSelectedParagraphElements();
 
                 var span:SpanElement = new SpanElement();
                 span.text = BULLET_TEXT;
-                span.color = firstElement.color;
+                span.color = paragraphs[0].getFirstLeaf().color;
                 span.fontSize = 15;
 
-                firstElementParagraph.addChildAt(0, span);
-                moveSelectionRight(span.text.length);
+                paragraphs[0].addChildAt(0, span);
+                shiftSelection(BULLET_TEXT.length, BULLET_TEXT.length);
 
-                var currentElementParagraph:ParagraphElement = firstElementParagraph;
-                while (currentElementParagraph != lastElementParagraph) {
-                    currentElementParagraph = currentElementParagraph.getNextParagraph();
-                    currentElementParagraph.addChildAt(0, span.deepCopy());
-                    expandSelectionEnd(BULLET_TEXT.length);
+                for (var i:int = 1; i < paragraphs.length; i++) {
+                    paragraphs[i].addChildAt(0, span.deepCopy());
+                    shiftSelection(0, BULLET_TEXT.length);
                 }
 
                 dispatchEvent(new Event('textFlowChanged'));
@@ -225,50 +228,87 @@
             }
 
             private function bulletListDeselected():void {
-				var start:int = editManager.getSelectionState().absoluteStart;
-				var end:int = editManager.getSelectionState().absoluteEnd;
-				var firstElement:FlowElement = editManager.textFlow.findLeaf(start);
-				var firstElementParagraph:ParagraphElement = firstElement.getParagraph();
-				var lastElement:FlowElement = editManager.textFlow.findLeaf(end);
-				var lastElementParagraph:ParagraphElement = lastElement.getParagraph();
-								
-				var firstParagraphStart:int = firstElementParagraph.getAbsoluteStart();
-				
-				var currentElementParagraph:ParagraphElement = firstElementParagraph;
-				var firstLeaf:FlowLeafElement = currentElementParagraph.getFirstLeaf();
-				var bulletFound:Boolean = firstLeaf.text.indexOf(BULLET_TEXT) == 0;
-				var spanElement:SpanElement;
-				if (bulletFound && firstLeaf is SpanElement) {
-					spanElement = firstLeaf as SpanElement;
-					spanElement.text = spanElement.text.substring(BULLET_TEXT.length);
-					moveSelectionRight(-BULLET_TEXT.length);
-				}
-				
-				while (currentElementParagraph != lastElementParagraph) {
-					currentElementParagraph = currentElementParagraph.getNextParagraph();
-					firstLeaf = currentElementParagraph.getFirstLeaf();
-					bulletFound = firstLeaf.text.indexOf(BULLET_TEXT) == 0;
-					if (bulletFound && firstLeaf is SpanElement) {
-						spanElement = firstLeaf as SpanElement;
-						spanElement.text = spanElement.text.substring(BULLET_TEXT.length);
-						expandSelectionEnd(-BULLET_TEXT.length);
-					}
-				}
+                var paragraphs:Array = getSelectedParagraphElements();
 
-				dispatchEvent(new Event('textFlowChanged'));
+                var firstLeaf:FlowLeafElement = paragraphs[0].getFirstLeaf();
+                var bulletFound:Boolean = firstLeaf.text.indexOf(BULLET_TEXT) == 0;
+                var spanElement:SpanElement;
+                if (bulletFound && firstLeaf is SpanElement) {
+                    spanElement = firstLeaf as SpanElement;
+                    spanElement.text = spanElement.text.substring(BULLET_TEXT.length);
+
+                    // Move the selection back over to the left.  Compensate for cases
+                    // where part of the bullet text is selected.
+                    var paragraphStart:int = paragraphs[0].getAbsoluteStart();
+                    var selectionStart:int = editManager.absoluteStart;
+                    var initialMoveOffset:int = selectionStart - paragraphStart;
+                    shiftSelection(-Math.min(BULLET_TEXT.length, initialMoveOffset), -BULLET_TEXT.length);
+                }
+
+                for (var i:int = 1; i < paragraphs.length; i++) {
+                    firstLeaf = paragraphs[i].getFirstLeaf();
+                    bulletFound = firstLeaf.text.indexOf(BULLET_TEXT) == 0;
+                    if (bulletFound && firstLeaf is SpanElement) {
+                        spanElement = firstLeaf as SpanElement;
+                        spanElement.text = spanElement.text.substring(BULLET_TEXT.length);
+                        shiftSelection(0, -BULLET_TEXT.length);
+                    }
+                }
+
+                dispatchEvent(new Event('textFlowChanged'));
 
                 display.setFocus();
             }
 
-            private function moveSelectionRight(length:int):void {
-                display.selectRange(display.selectionAnchorPosition + length, display.selectionActivePosition + length);
+            private function shiftSelection(startIndex:int, endIndex:int):void {
+                if (display.selectionActivePosition > display.selectionAnchorPosition)
+                    display.selectRange(display.selectionAnchorPosition + startIndex, display.selectionActivePosition + endIndex);
+                else
+                    display.selectRange(display.selectionAnchorPosition + endIndex, display.selectionActivePosition + startIndex);
             }
 
-            private function expandSelectionEnd(length:int):void {
-                if (display.selectionActivePosition > display.selectionAnchorPosition)
-                    display.selectRange(display.selectionAnchorPosition, display.selectionActivePosition + length);
-                else
-                    display.selectRange(display.selectionAnchorPosition + length, display.selectionActivePosition);
+            private function getSelectedParagraphElements():Array {
+                var paragraphs:Array = new Array();
+
+                var start:int = editManager.getSelectionState().absoluteStart;
+                var end:int = editManager.getSelectionState().absoluteEnd;
+                var firstElement:FlowElement = editManager.textFlow.findLeaf(start);
+                var firstElementParagraph:ParagraphElement = firstElement.getParagraph();
+                var lastElement:FlowElement = editManager.textFlow.findLeaf(end);
+                var lastElementParagraph:ParagraphElement = lastElement.getParagraph();
+
+                paragraphs.push(firstElementParagraph);
+
+                var currentElementParagraph:ParagraphElement = firstElementParagraph;
+                while (currentElementParagraph != lastElementParagraph) {
+                    currentElementParagraph = currentElementParagraph.getNextParagraph();
+                    paragraphs.push(currentElementParagraph);
+                }
+
+                return paragraphs;
+            }
+
+            private function resetAlignButtons():void {
+                var paragraphs:Array = getSelectedParagraphElements();
+
+                var align:String = paragraphs[0].textAlign;
+
+                // if paragraph element does not contain a textAlign, default to left
+                if (!align)
+                    align = "left";
+
+                for (var i:int = 1; i < paragraphs.length; i++) {
+                    var curAlign:String = paragraphs[i].textAlign;
+                    if (curAlign && curAlign != align) {
+                        align = null;
+                        break;
+                    }
+                }
+
+                leftAlign.selected = align == "left";
+                centerAlign.selected = align == "center";
+                rightAlign.selected = align == "right";
+                justifyAlign.selected = align == "justify";
             }
 
             //--------------------------------------------------------------------------
@@ -311,6 +351,44 @@
                     bulletListSelected();
                 else
                     bulletListDeselected();
+            }
+
+            private function align_clickHandler(event:MouseEvent):void {
+                var align:String;
+                if (event.currentTarget == leftAlign)
+                    align = "left";
+                if (event.currentTarget == centerAlign)
+                    align = "center";
+                if (event.currentTarget == rightAlign)
+                    align = "right";
+                if (event.currentTarget == justifyAlign)
+                    align = "justify";
+
+                var paragraphs:Array = getSelectedParagraphElements();
+
+                for each (var paragraph:ParagraphElement in paragraphs) {
+                    paragraph.textAlign = align;
+                }
+
+                resetAlignButtons();
+
+                dispatchEvent(new Event('textFlowChanged'));
+
+                display.setFocus();
+            }
+
+            private function indent_clickHandler(event:MouseEvent):void {
+                var increaseMultiplier:int = event.currentTarget == increaseIndent ? 1 : -1;
+                var paragraphs:Array = getSelectedParagraphElements();
+
+                for each (var paragraph:ParagraphElement in paragraphs) {
+                    var indentation:int = increaseMultiplier * INDENTATION_PIXELS;
+                    if (paragraph.textIndent > 0)
+                        indentation += paragraph.textIndent;
+                    paragraph.textIndent = Math.max(0, indentation);
+                }
+
+                display.setFocus();
             }
 
             private function fontSize_changeHandler(event:IndexChangeEvent):void {
@@ -387,26 +465,22 @@
                 underline.selected = underlineFormat == "underline";
 
                 // bullets
-                var start:int = editManager.getSelectionState().absoluteStart;
-                var end:int = editManager.getSelectionState().absoluteEnd;
-                var firstElement:FlowElement = editManager.textFlow.findLeaf(start);
-                var firstElementParagraph:ParagraphElement = firstElement.getParagraph();
-                var lastElement:FlowElement = editManager.textFlow.findLeaf(end);
-                var lastElementParagraph:ParagraphElement = lastElement.getParagraph();
+                var paragraphs:Array = getSelectedParagraphElements();
 
                 var spanText:String = BULLET_TEXT;
 
-                var currentElementParagraph:ParagraphElement = firstElementParagraph;
-                var currentElementParagraphFirstLeaf:FlowLeafElement = currentElementParagraph.getFirstLeaf();
-                var bulletFound:Boolean = currentElementParagraphFirstLeaf.text.indexOf(spanText) == 0;
+                var firstLeaf:FlowLeafElement = paragraphs[0].getFirstLeaf();
+                var bulletFound:Boolean = firstLeaf.text.indexOf(spanText) == 0;
 
-                while (!bulletFound && currentElementParagraph != lastElementParagraph) {
-                    currentElementParagraph = currentElementParagraph.getNextParagraph();
-                    currentElementParagraphFirstLeaf = currentElementParagraph.getFirstLeaf();
-                    bulletFound = currentElementParagraphFirstLeaf.text.indexOf(spanText) == 0;
+                for (var i:int = 1; i < paragraphs.length && !bulletFound; i++) {
+                    firstLeaf = paragraphs[i].getFirstLeaf();
+                    bulletFound = firstLeaf.text.indexOf(spanText) == 0;
                 }
-				
-				bulletList.selected = bulletFound;
+
+                bulletList.selected = bulletFound;
+
+                // align
+                resetAlignButtons();
 
                 // font size
                 var size:* = format.fontSize;
@@ -431,6 +505,43 @@
                     colorPicker.selectedColor = colorFormat;
                     colorList.selectedItem = colorFormat;
                 }
+
+                // enter key pressed, check for bullets
+                if (enterKeyPressed) {
+                    enterKeyPressed = false;
+					var index:int = editManager.getSelectionState().absoluteStart;
+                    var leaf:FlowLeafElement = editManager.textFlow.findLeaf(index);
+                    var currentParagraph:ParagraphElement = leaf.getParagraph();
+					var previousParagraph:ParagraphElement = currentParagraph.getPreviousParagraph();
+                    firstLeaf = previousParagraph.getFirstLeaf();
+                    bulletFound = firstLeaf.text.indexOf(spanText) == 0;
+                    if (bulletFound) {
+						var span:SpanElement = new SpanElement();
+						span.text = BULLET_TEXT;
+						span.color = leaf.color;
+						span.fontSize = 15;
+
+						currentParagraph.addChildAt(0,span);
+						
+						index += BULLET_TEXT.length;
+						display.selectRange(index,index);
+						
+						var fontStyle:TextLayoutFormat = new TextLayoutFormat();
+						var newFontSize:* = leaf.getStyle("fontSize");
+						fontStyle.fontSize = newFontSize;
+						editManager.applyLeafFormat(fontStyle);
+						fontSize.selectedItem = newFontSize;
+					}
+                }
+            }
+
+            /**
+             * Sets up a trigger that the change handler deals with.
+             */
+            private function display_keyDownHandler(event:KeyboardEvent):void {
+                if (event.keyCode == Keyboard.ENTER) {
+                    enterKeyPressed = true;
+				}
             }
         ]]>
     </fx:Script>
@@ -455,6 +566,30 @@
                         click="bulletList_clickHandler(event)"
                         skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(18)}" toolTip="Bulleted list"/>
+        <s:ToggleButton id="leftAlign" width="23" height="23" cornerRadius="0"
+                        click="align_clickHandler(event)" selected="true"
+                        skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
+                        content="{Icons.getIcon(9)}" toolTip="Left align"/>
+        <s:ToggleButton id="centerAlign" width="23" height="23" cornerRadius="0"
+                        click="align_clickHandler(event)"
+                        skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
+                        content="{Icons.getIcon(4)}" toolTip="Center align"/>
+        <s:ToggleButton id="rightAlign" width="23" height="23" cornerRadius="0"
+                        click="align_clickHandler(event)"
+                        skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
+                        content="{Icons.getIcon(13)}" toolTip="Right align"/>
+        <s:ToggleButton id="justifyAlign" width="23" height="23" cornerRadius="0"
+                        click="align_clickHandler(event)"
+                        skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
+                        content="{Icons.getIcon(8)}" toolTip="Justify align"/>
+        <s:Button id="increaseIndent" width="23" height="23" cornerRadius="0"
+                  click="indent_clickHandler(event)"
+                  skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
+                  content="{Icons.getIcon(6)}" toolTip="Increase indent"/>
+        <s:Button id="decreaseIndent" width="23" height="23" cornerRadius="0"
+                  click="indent_clickHandler(event)"
+                  skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
+                  content="{Icons.getIcon(11)}" toolTip="Decrease indent"/>
         <s:ComboBox id="fontSize" width="50" cornerRadius="0" selectedItem="12"
                     change="fontSize_changeHandler(event)" toolTip="Font size"
                     dataProvider="{new ArrayCollection([6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,32,36,40,44,48,54,60,66,72,80,88,96])}"/>
@@ -498,6 +633,7 @@
     <s:RichEditableText id="display" width="100%" height="{Math.max(200,display.contentHeight)}"
                         change="dispatchEvent(new Event('textFlowChanged'));"
                         selectionChange="display_selectionChangeHandler(event)"
-                        creationComplete="display.setFocus();"/>
+                        creationComplete="display.setFocus();"
+                        keyDown="display_keyDownHandler(event)"/>
 
 </s:Group>
