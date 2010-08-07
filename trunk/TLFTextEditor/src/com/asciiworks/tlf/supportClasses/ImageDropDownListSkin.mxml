@@ -10,6 +10,7 @@
     <fx:Metadata>
         <![CDATA[ 
         	[HostComponent("com.asciiworks.tlf.supportClasses.ContentDropDownList")]
+			[Event(name="submit",type="com.asciiworks.tlf.supportClasses.ContentDropDownListEvent")]
     	]]>
     </fx:Metadata>
 
@@ -108,7 +109,7 @@
             private function submitButton_clickHandler(event:MouseEvent):void {
                 pendingSubmitEvent = event.clone() as MouseEvent;
                 event.stopImmediatePropagation();
-				invalidMessage.visible = false;
+                invalidMessage.visible = false;
                 widthInput.enabled = false;
                 heightInput.enabled = false;
                 url.enabled = false;
@@ -132,11 +133,11 @@
 
             private function loader_ioErrorHandler(event:IOErrorEvent):void {
                 invalidMessage.visible = true;
-				widthInput.enabled = true;
-				heightInput.enabled = true;
-				url.enabled = true;
-				submitButton.enabled = true;
-				submitButton.label = "Submit";
+                widthInput.enabled = true;
+                heightInput.enabled = true;
+                url.enabled = true;
+                submitButton.enabled = true;
+                submitButton.label = "Submit";
             }
         ]]>
     </fx:Script>
