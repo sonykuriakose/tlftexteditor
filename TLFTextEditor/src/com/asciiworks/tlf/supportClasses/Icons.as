@@ -7,7 +7,7 @@ package com.asciiworks.tlf.supportClasses {
     public class Icons {
 		
 		[Embed (source="nicEditorIcons.gif" )]
-		private static const ICONS_DATA:Class;
+		private static var ICONS_DATA:Class;
 		
 		public static function getIcon(iconNum:int):BitmapData {
 			var iconsBitmap:Bitmap = new ICONS_DATA();

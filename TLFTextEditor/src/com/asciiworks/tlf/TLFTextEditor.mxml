@@ -546,53 +546,66 @@
         ]]>
     </fx:Script>
 
+	<!--- @private -->
     <s:Group id="toolbar" width="100%">
         <s:layout>
             <s:HorizontalLayout gap="0"/>
         </s:layout>
+		<!--- @private -->
         <s:ToggleButton id="bold" width="23" height="23" cornerRadius="0"
                         click="bold_clickHandler(event)"
                         skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(3)}" toolTip="Bold"/>
+		<!--- @private -->
         <s:ToggleButton id="italic" width="23" height="23" cornerRadius="0"
                         click="italic_clickHandler(event)"
                         skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(7)}" toolTip="Italic"/>
+		<!--- @private -->
         <s:ToggleButton id="underline" width="23" height="23" cornerRadius="0"
                         click="underline_clickHandler(event)"
                         skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(19)}" toolTip="Underline"/>
+		<!--- @private -->
         <s:ToggleButton id="bulletList" width="23" height="23" cornerRadius="0"
                         click="bulletList_clickHandler(event)"
                         skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(18)}" toolTip="Bulleted list"/>
+		<!--- @private -->
         <s:ToggleButton id="leftAlign" width="23" height="23" cornerRadius="0"
                         click="align_clickHandler(event)" selected="true"
                         skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(9)}" toolTip="Left align"/>
+		<!--- @private -->
         <s:ToggleButton id="centerAlign" width="23" height="23" cornerRadius="0"
                         click="align_clickHandler(event)"
                         skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(4)}" toolTip="Center align"/>
+		<!--- @private -->
         <s:ToggleButton id="rightAlign" width="23" height="23" cornerRadius="0"
                         click="align_clickHandler(event)"
                         skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(13)}" toolTip="Right align"/>
+		<!--- @private -->
         <s:ToggleButton id="justifyAlign" width="23" height="23" cornerRadius="0"
                         click="align_clickHandler(event)"
                         skinClass="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(8)}" toolTip="Justify align"/>
+		<!--- @private -->
         <s:Button id="increaseIndent" width="23" height="23" cornerRadius="0"
                   click="indent_clickHandler(event)"
                   skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
                   content="{Icons.getIcon(6)}" toolTip="Increase indent"/>
+		<!--- @private -->
         <s:Button id="decreaseIndent" width="23" height="23" cornerRadius="0"
                   click="indent_clickHandler(event)"
                   skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
                   content="{Icons.getIcon(11)}" toolTip="Decrease indent"/>
+		<!--- @private -->
         <s:ComboBox id="fontSize" width="50" cornerRadius="0" selectedItem="12"
                     change="fontSize_changeHandler(event)" toolTip="Font size"
                     dataProvider="{new ArrayCollection([6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,32,36,40,44,48,54,60,66,72,80,88,96])}"/>
+		<!--- @private -->
         <s:ComboBox id="fontFamily" width="100" cornerRadius="0" selectedIndex="0"
                     change="fontFamily_changeHandler(event)" toolTip="Font family">
             <s:dataProvider>
@@ -609,27 +622,33 @@
                 </s:ArrayCollection>
             </s:dataProvider>
         </s:ComboBox>
+		<!--- @private -->
         <mx:ColorPicker id="colorPicker" height="23" color="0x000000"
                         change="colorPicker_changeHandler(event)" toolTip="Text color"/>
+		<!--- @private -->
         <supportClasses:ColorList id="colorList" width="50" height="23" visible="false"
                                   includeInLayout="false"
                                   skinClass="com.asciiworks.tlf.supportClasses.ColorListSkin"
                                   itemRenderer="com.asciiworks.tlf.supportClasses.ColorListItemRenderer"
                                   selectedIndex="0" change="colorPicker_changeHandler(event)"
                                   toolTip="Text color"/>
+		<!--- @private -->
         <supportClasses:ContentDropDownList width="23" height="23" cornerRadius="0"
                                             submit="link_submitHandler(event)"
                                             skinClass="com.asciiworks.tlf.supportClasses.LinkDropDownListSkin"
                                             content="{Icons.getIcon(21)}" toolTip="Link"/>
+		<!--- @private -->
         <s:Button width="23" height="23" cornerRadius="0" click="unlink_clickHandler(event)"
                   skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
                   content="{Icons.getIcon(22)}" toolTip="Remove link"/>
+		<!--- @private -->
         <supportClasses:ContentDropDownList width="23" height="23" cornerRadius="0"
                                             submit="image_submitHandler(event)"
                                             skinClass="com.asciiworks.tlf.supportClasses.ImageDropDownListSkin"
                                             content="{Icons.getIcon(20)}" toolTip="Insert image"/>
     </s:Group>
 
+	<!--- @private -->
     <s:RichEditableText id="display" width="100%" height="{Math.max(200,display.contentHeight)}"
                         change="dispatchEvent(new Event('textFlowChanged'));"
                         selectionChange="display_selectionChangeHandler(event)"
