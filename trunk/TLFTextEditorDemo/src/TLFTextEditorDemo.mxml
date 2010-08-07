@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:tlf="com.asciiworks.tlf.*"
+			   creationComplete="creationCompleteHandler()">
+	
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			
+			private function creationCompleteHandler():void {
+				ExternalInterface.addCallback("initialize", initializeTextFlow);
+				notifyBackendAppReady();
+			}
+			
+			private function notifyBackendAppReady():void {
+				if (ExternalInterface.available) {
+					try {
+						ExternalInterface.call("appReady");
+					} catch (error:Error) {
+						handleError(error.message);
+					}
+				} else {
+					handleError("ExternalInterface not available.");
+				}
+			}
+			
+			private function updateBackend():void {
+				if (ExternalInterface.available) {
+					try {
+						ExternalInterface.call("textFlowUpdate", editor.textFlowMarkup);
+					} catch (error:Error) {
+						handleError(error.message);
+					}
+				} else {
+					handleError("ExternalInterface not available.");
+				}
+			}
+			
+			private function initializeTextFlow(textFlow:Object):void {
+				editor.textFlowMarkup = textFlow as String;
+			}
+			
+			private function handleError(error:String):void {
+				Alert.show(error, "Error", Alert.OK);
+			}
+		]]>
+	</fx:Script>
+	
+	<tlf:TLFTextEditor id="editor" width="100%" availableTextColors="{[0xFFFFFF,0xFFD87D,0x9D9FA2]}"
+					   initialTextColor="0x9D9FA2" lineHeight="180%"
+					   textAreaBackgroundColor="0x222222" textFlowChanged="updateBackend()"/>
+	
+	<s:RichEditableText width="600" height="300" text="{editor.textFlowMarkup}"/>
+	
+</s:Application>
