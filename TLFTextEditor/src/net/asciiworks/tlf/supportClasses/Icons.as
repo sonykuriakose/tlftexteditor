@@ -1,4 +1,4 @@
-package com.asciiworks.tlf.supportClasses {
+package net.asciiworks.tlf.supportClasses {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.geom.Point;

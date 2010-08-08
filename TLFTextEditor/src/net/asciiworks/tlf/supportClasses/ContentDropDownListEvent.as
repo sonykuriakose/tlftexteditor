@@ -1,4 +1,4 @@
-package com.asciiworks.tlf.supportClasses {
+package net.asciiworks.tlf.supportClasses {
     import flash.events.Event;
 
     public class ContentDropDownListEvent extends Event {

@@ -1,4 +1,4 @@
-package com.asciiworks.tlf.supportClasses {
+package net.asciiworks.tlf.supportClasses {
     import flash.display.DisplayObject;
     import flash.events.Event;
     import flash.events.MouseEvent;
@@ -11,7 +11,7 @@ package com.asciiworks.tlf.supportClasses {
     //  Events
     //--------------------------------------
 
-    [Event(name="submit", type="com.asciiworks.tlf.supportClasses.ContentDropDownListEvent")]
+    [Event(name="submit", type="net.asciiworks.tlf.supportClasses.ContentDropDownListEvent")]
 
     public class ContentDropDownList extends DropDownList {
 

@@ -9,8 +9,8 @@
 
     <fx:Metadata>
         <![CDATA[ 
-        	[HostComponent("com.asciiworks.tlf.supportClasses.ContentDropDownList")]
-			[Event(name="submit",type="com.asciiworks.tlf.supportClasses.ContentDropDownListEvent")]
+        	[HostComponent("net.asciiworks.tlf.supportClasses.ContentDropDownList")]
+			[Event(name="submit",type="net.asciiworks.tlf.supportClasses.ContentDropDownListEvent")]
     	]]>
     </fx:Metadata>
 
@@ -193,7 +193,7 @@
     </s:PopUpAnchor>
 
     <s:Button id="openButton" left="0" right="0" top="0" bottom="0" focusEnabled="false"
-              skinClass="com.asciiworks.tlf.supportClasses.IconButtonSkin"
+              skinClass="net.asciiworks.tlf.supportClasses.IconButtonSkin"
               content="{hostComponent.content}"/>
 
 </s:SparkSkin>
