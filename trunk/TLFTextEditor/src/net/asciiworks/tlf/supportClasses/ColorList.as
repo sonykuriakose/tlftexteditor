@@ -10,7 +10,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-package com.asciiworks.tlf.supportClasses {
+package net.asciiworks.tlf.supportClasses {
 
     import mx.core.UIComponentGlobals;
     import mx.core.mx_internal;

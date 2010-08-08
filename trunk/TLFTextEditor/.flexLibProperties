@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <flexLibProperties includeAllClasses="true" version="3">
   <includeClasses>
-    <classEntry path="com.asciiworks.tlf.TLFTextEditor"/>
-    <classEntry path="com.asciiworks.tlf.supportClasses.ColorListSkin"/>
-    <classEntry path="com.asciiworks.tlf.supportClasses.ColorListItemRenderer"/>
-    <classEntry path="com.asciiworks.tlf.supportClasses.ColorList"/>
-    <classEntry path="com.asciiworks.tlf.supportClasses.Icons"/>
-    <classEntry path="com.asciiworks.tlf.supportClasses.IconToggleButtonSkin"/>
-    <classEntry path="com.asciiworks.tlf.supportClasses.IconButtonSkin"/>
-    <classEntry path="com.asciiworks.tlf.supportClasses.LinkDropDownListSkin"/>
-    <classEntry path="com.asciiworks.tlf.supportClasses.ContentDropDownList"/>
-    <classEntry path="com.asciiworks.tlf.supportClasses.ContentDropDownListEvent"/>
+    <classEntry path="net.asciiworks.tlf.TLFTextEditor"/>
+    <classEntry path="net.asciiworks.tlf.supportClasses.ColorListSkin"/>
+    <classEntry path="net.asciiworks.tlf.supportClasses.ColorListItemRenderer"/>
+    <classEntry path="net.asciiworks.tlf.supportClasses.ColorList"/>
+    <classEntry path="net.asciiworks.tlf.supportClasses.Icons"/>
+    <classEntry path="net.asciiworks.tlf.supportClasses.IconToggleButtonSkin"/>
+    <classEntry path="net.asciiworks.tlf.supportClasses.IconButtonSkin"/>
+    <classEntry path="net.asciiworks.tlf.supportClasses.LinkDropDownListSkin"/>
+    <classEntry path="net.asciiworks.tlf.supportClasses.ContentDropDownList"/>
+    <classEntry path="net.asciiworks.tlf.supportClasses.ContentDropDownListEvent"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
