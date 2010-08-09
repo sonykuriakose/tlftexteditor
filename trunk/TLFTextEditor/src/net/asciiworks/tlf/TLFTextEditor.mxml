@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
          xmlns:mx="library://ns.adobe.com/flex/mx" creationComplete="creationCompleteHandler(event)"
-         xmlns:supportClasses="net.asciiworks.tlf.supportClasses.*">
+         xmlns:supportClasses="net.asciiworks.tlf.supportClasses.*" width="100%">
 
     <s:layout>
         <s:VerticalLayout gap="0"/>
@@ -23,14 +23,14 @@
             import flashx.textLayout.elements.TextFlow;
             import flashx.textLayout.formats.ITextLayoutFormat;
             import flashx.textLayout.formats.TextLayoutFormat;
-            
+
             import mx.events.ColorPickerEvent;
             import mx.events.FlexEvent;
-            
+
             import net.asciiworks.tlf.supportClasses.ColorListSkin;
             import net.asciiworks.tlf.supportClasses.ContentDropDownListEvent;
             import net.asciiworks.tlf.supportClasses.Icons;
-            
+
             import spark.events.DropDownEvent;
             import spark.events.IndexChangeEvent;
 
@@ -53,7 +53,7 @@
             //--------------------------------------------------------------------------
 
             private var enterKeyPressed:Boolean = false;
-			
+
             //--------------------------------------------------------------------------
             //
             //  Properties
@@ -61,16 +61,46 @@
             //--------------------------------------------------------------------------
 
             //--------------------------------------
+            //  automaticallyExpand
+            //--------------------------------------
+
+            private var _automaticallyExpand:Boolean = true;
+
+            /**
+             * When <code>true</code>, automatically resizes the height of the editor as the
+             * user types, to fit the content.  When <code>false</code>, sets the height of the
+             * editor to the height set by the parent.<br>
+             * <br>
+             * Note: When <code>true</code>, the height that the implementing class sets will be
+             * the initial height for the editor.  It will then expand beyond that height if the
+             * user types more content.<br>
+             * <br>
+             * Default is <code>true</code>.
+             */
+            public function get automaticallyExpand():Boolean {
+                return _automaticallyExpand;
+            }
+
+            public function set automaticallyExpand(value:Boolean):void {
+                if (_automaticallyExpand == value)
+                    return;
+
+                _automaticallyExpand = value;
+
+                updateHeight();
+            }
+
+            //--------------------------------------
             //  availableTextColors
             //--------------------------------------
 
             private var _availableTextColors:Array;
 
-			/**
-			 * An array of uints representing colors which to populate the text color drop
-			 * down box.  If this property is not set, the full spectrum of colors will be
-			 * available.
-			 */
+            /**
+             * An array of uints representing colors which to populate the text color drop
+             * down box.  If this property is null, the full spectrum of colors will be
+             * available.
+             */
             public function get availableTextColors():Array {
                 return _availableTextColors;
             }
@@ -94,9 +124,9 @@
 
             private var _initialTextColor:uint = 0x000000;
 
-			/**
-			 * The initial text color selected when the editor is first loaded.
-			 */
+            /**
+             * The initial text color selected when the editor is first loaded.
+             */
             public function get initialTextColor():uint {
                 return _initialTextColor;
             }
@@ -120,9 +150,9 @@
 
             private var _lineHeight:Object;
 
-			/**
-			 * The lineHeight for the generated TextFlow object.
-			 */
+            /**
+             * The lineHeight for the generated TextFlow object.
+             */
             public function get lineHeight():Object {
                 return _lineHeight;
             }
@@ -144,13 +174,13 @@
             //  textAreaBackgroundColor
             //--------------------------------------
 
-			/**
-			 * This sets the editor text area background color.  It will not update
-			 * the TextFlow with any background colors.
-			 * 
-			 * This is useful if you are using the editor in a CMS and you want the editor
-			 * to match the content pages.
-			 */
+            /**
+             * This sets the editor text area background color.  It will not update
+             * the TextFlow with any background colors.
+             *
+             * This is useful if you are using the editor in a CMS and you want the editor
+             * to match the content pages.
+             */
             public function get textAreaBackgroundColor():uint {
                 return display.getStyle("backgroundColor");
             }
@@ -165,15 +195,15 @@
 
             [Bindable(event="textFlowChanged")]
 
-			/**
-			 * The generated TextFlow object.  This is updated whenever the user makes
-			 * a change to the editor text.
-			 * 
-			 * This can also be used to set the initial TextFlow data when the editor first
-			 * loads.
-			 * 
-			 * When this changes, it will dispatch the "textFlowChanged" event.
-			 */
+            /**
+             * The generated TextFlow object.  This is updated whenever the user makes
+             * a change to the editor text.
+             *
+             * This can also be used to set the initial TextFlow data when the editor first
+             * loads.
+             *
+             * When this changes, it will dispatch the "textFlowChanged" event.
+             */
             public function get textFlow():TextFlow {
                 return display.textFlow.deepCopy() as TextFlow;
             }
@@ -193,15 +223,15 @@
 
             [Bindable(event="textFlowChanged")]
 
-			/**
-			 * The generated TextFlow in String format.  This is updated whenever the
-			 * user makes a change to the editor text.
-			 * 
-			 * This can also be used to set the initial TextFlow data when the editor first
-			 * loads.
-			 * 
-			 * When this changes, it will dispatch the "textFlowChanged" event.
-			 */
+            /**
+             * The generated TextFlow in String format.  This is updated whenever the
+             * user makes a change to the editor text.
+             *
+             * This can also be used to set the initial TextFlow data when the editor first
+             * loads.
+             *
+             * When this changes, it will dispatch the "textFlowChanged" event.
+             */
             public function get textFlowMarkup():String {
                 return TextConverter.export(display.textFlow, TextConverter.TEXT_LAYOUT_FORMAT, ConversionType.STRING_TYPE) as String;
             }
@@ -342,6 +372,13 @@
                 centerAlign.selected = align == "center";
                 rightAlign.selected = align == "right";
                 justifyAlign.selected = align == "justify";
+            }
+
+            private function updateHeight():void {
+                if (automaticallyExpand)
+                    scroller.height = Math.max(height - toolbar.height, display.contentHeight);
+                else
+                    scroller.percentHeight = 100;
             }
 
             //--------------------------------------------------------------------------
@@ -542,29 +579,29 @@
                 // enter key pressed, check for bullets
                 if (enterKeyPressed) {
                     enterKeyPressed = false;
-					var index:int = editManager.getSelectionState().absoluteStart;
+                    var index:int = editManager.getSelectionState().absoluteStart;
                     var leaf:FlowLeafElement = editManager.textFlow.findLeaf(index);
                     var currentParagraph:ParagraphElement = leaf.getParagraph();
-					var previousParagraph:ParagraphElement = currentParagraph.getPreviousParagraph();
+                    var previousParagraph:ParagraphElement = currentParagraph.getPreviousParagraph();
                     firstLeaf = previousParagraph.getFirstLeaf();
                     bulletFound = firstLeaf.text.indexOf(spanText) == 0;
                     if (bulletFound) {
-						var span:SpanElement = new SpanElement();
-						span.text = BULLET_TEXT;
-						span.color = leaf.color;
-						span.fontSize = 15;
+                        var span:SpanElement = new SpanElement();
+                        span.text = BULLET_TEXT;
+                        span.color = leaf.color;
+                        span.fontSize = 15;
 
-						currentParagraph.addChildAt(0,span);
-						
-						index += BULLET_TEXT.length;
-						display.selectRange(index,index);
-						
-						var fontStyle:TextLayoutFormat = new TextLayoutFormat();
-						var newFontSize:* = leaf.getStyle("fontSize");
-						fontStyle.fontSize = newFontSize;
-						editManager.applyLeafFormat(fontStyle);
-						fontSize.selectedItem = newFontSize;
-					}
+                        currentParagraph.addChildAt(0, span);
+
+                        index += BULLET_TEXT.length;
+                        display.selectRange(index, index);
+
+                        var fontStyle:TextLayoutFormat = new TextLayoutFormat();
+                        var newFontSize:* = leaf.getStyle("fontSize");
+                        fontStyle.fontSize = newFontSize;
+                        editManager.applyLeafFormat(fontStyle);
+                        fontSize.selectedItem = newFontSize;
+                    }
                 }
             }
 
@@ -574,71 +611,71 @@
             private function display_keyDownHandler(event:KeyboardEvent):void {
                 if (event.keyCode == Keyboard.ENTER) {
                     enterKeyPressed = true;
-				}
+                }
             }
         ]]>
     </fx:Script>
 
-	<!--- @private -->
+    <!--- @private -->
     <s:Group id="toolbar" width="100%">
         <s:layout>
             <s:HorizontalLayout gap="0"/>
         </s:layout>
-		<!--- @private -->
+        <!--- @private -->
         <s:ToggleButton id="bold" width="23" height="23" cornerRadius="0"
                         click="bold_clickHandler(event)"
                         skinClass="net.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(3)}" toolTip="Bold"/>
-		<!--- @private -->
+        <!--- @private -->
         <s:ToggleButton id="italic" width="23" height="23" cornerRadius="0"
                         click="italic_clickHandler(event)"
                         skinClass="net.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(7)}" toolTip="Italic"/>
-		<!--- @private -->
+        <!--- @private -->
         <s:ToggleButton id="underline" width="23" height="23" cornerRadius="0"
                         click="underline_clickHandler(event)"
                         skinClass="net.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(19)}" toolTip="Underline"/>
-		<!--- @private -->
+        <!--- @private -->
         <s:ToggleButton id="bulletList" width="23" height="23" cornerRadius="0"
                         click="bulletList_clickHandler(event)"
                         skinClass="net.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(18)}" toolTip="Bulleted list"/>
-		<!--- @private -->
+        <!--- @private -->
         <s:ToggleButton id="leftAlign" width="23" height="23" cornerRadius="0"
                         click="align_clickHandler(event)" selected="true"
                         skinClass="net.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(9)}" toolTip="Left align"/>
-		<!--- @private -->
+        <!--- @private -->
         <s:ToggleButton id="centerAlign" width="23" height="23" cornerRadius="0"
                         click="align_clickHandler(event)"
                         skinClass="net.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(4)}" toolTip="Center align"/>
-		<!--- @private -->
+        <!--- @private -->
         <s:ToggleButton id="rightAlign" width="23" height="23" cornerRadius="0"
                         click="align_clickHandler(event)"
                         skinClass="net.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(13)}" toolTip="Right align"/>
-		<!--- @private -->
+        <!--- @private -->
         <s:ToggleButton id="justifyAlign" width="23" height="23" cornerRadius="0"
                         click="align_clickHandler(event)"
                         skinClass="net.asciiworks.tlf.supportClasses.IconToggleButtonSkin"
                         content="{Icons.getIcon(8)}" toolTip="Justify align"/>
-		<!--- @private -->
+        <!--- @private -->
         <s:Button id="increaseIndent" width="23" height="23" cornerRadius="0"
                   click="indent_clickHandler(event)"
                   skinClass="net.asciiworks.tlf.supportClasses.IconButtonSkin"
                   content="{Icons.getIcon(6)}" toolTip="Increase indent"/>
-		<!--- @private -->
+        <!--- @private -->
         <s:Button id="decreaseIndent" width="23" height="23" cornerRadius="0"
                   click="indent_clickHandler(event)"
                   skinClass="net.asciiworks.tlf.supportClasses.IconButtonSkin"
                   content="{Icons.getIcon(11)}" toolTip="Decrease indent"/>
-		<!--- @private -->
+        <!--- @private -->
         <s:ComboBox id="fontSize" width="50" cornerRadius="0" selectedItem="12"
                     change="fontSize_changeHandler(event)" toolTip="Font size"
                     dataProvider="{new ArrayCollection([6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,32,36,40,44,48,54,60,66,72,80,88,96])}"/>
-		<!--- @private -->
+        <!--- @private -->
         <s:ComboBox id="fontFamily" width="100" cornerRadius="0" selectedIndex="0"
                     change="fontFamily_changeHandler(event)" toolTip="Font family">
             <s:dataProvider>
@@ -655,37 +692,40 @@
                 </s:ArrayCollection>
             </s:dataProvider>
         </s:ComboBox>
-		<!--- @private -->
+        <!--- @private -->
         <mx:ColorPicker id="colorPicker" height="23" color="0x000000"
                         change="colorPicker_changeHandler(event)" toolTip="Text color"/>
-		<!--- @private -->
+        <!--- @private -->
         <supportClasses:ColorList id="colorList" width="50" height="23" visible="false"
                                   includeInLayout="false"
                                   skinClass="net.asciiworks.tlf.supportClasses.ColorListSkin"
                                   itemRenderer="net.asciiworks.tlf.supportClasses.ColorListItemRenderer"
                                   selectedIndex="0" change="colorPicker_changeHandler(event)"
                                   toolTip="Text color"/>
-		<!--- @private -->
+        <!--- @private -->
         <supportClasses:ContentDropDownList width="23" height="23" cornerRadius="0"
                                             submit="link_submitHandler(event)"
                                             skinClass="net.asciiworks.tlf.supportClasses.LinkDropDownListSkin"
                                             content="{Icons.getIcon(21)}" toolTip="Link"/>
-		<!--- @private -->
+        <!--- @private -->
         <s:Button width="23" height="23" cornerRadius="0" click="unlink_clickHandler(event)"
                   skinClass="net.asciiworks.tlf.supportClasses.IconButtonSkin"
                   content="{Icons.getIcon(22)}" toolTip="Remove link"/>
-		<!--- @private -->
+        <!--- @private -->
         <supportClasses:ContentDropDownList width="23" height="23" cornerRadius="0"
                                             submit="image_submitHandler(event)"
                                             skinClass="net.asciiworks.tlf.supportClasses.ImageDropDownListSkin"
                                             content="{Icons.getIcon(20)}" toolTip="Insert image"/>
     </s:Group>
 
-	<!--- @private -->
-    <s:RichEditableText id="display" width="100%" height="{Math.max(200,display.contentHeight)}"
-                        change="dispatchEvent(new Event('textFlowChanged'));"
-                        selectionChange="display_selectionChangeHandler(event)"
-                        creationComplete="display.setFocus();"
-                        keyDown="display_keyDownHandler(event)"/>
+    <!--- @private -->
+    <s:Scroller id="scroller" width="100%">
+        <!--- @private -->
+        <s:RichEditableText id="display" left="0" right="0" height="100%"
+                            change="dispatchEvent(new Event('textFlowChanged'));updateHeight();"
+                            selectionChange="display_selectionChangeHandler(event)"
+                            creationComplete="display.setFocus();"
+                            keyDown="display_keyDownHandler(event)"/>
+    </s:Scroller>
 
 </s:Group>
