@@ -164,7 +164,7 @@
                 if (editManager) {
                     var containerStyle:TextLayoutFormat = new TextLayoutFormat();
                     containerStyle.lineHeight = value;
-                    editManager.applyContainerFormat(containerStyle);
+					editManager.applyFormatToElement(display.textFlow, containerStyle);
                 }
 
                 _lineHeight = value;
@@ -266,7 +266,7 @@
                 // reset line height
                 var containerStyle:TextLayoutFormat = new TextLayoutFormat();
                 containerStyle.lineHeight = lineHeight;
-                editManager.applyParagraphFormat(containerStyle);
+				editManager.applyFormatToElement(display.textFlow, containerStyle);
             }
 
             private function bulletListSelected():void {
